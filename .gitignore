@@ -1,0 +1,8 @@
+# Unreal Engine Plugin GitIgnore
+Binaries/*
+Intermediate/*
+DerivedDataCache/*
+*.pdb
+*.obj
+.vs/
+.idea/
