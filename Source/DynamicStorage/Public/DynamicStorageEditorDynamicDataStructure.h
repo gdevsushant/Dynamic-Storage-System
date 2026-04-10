@@ -11,7 +11,7 @@
 #include "NativeGameplayTags.h"
 #include "DynamicStorageEditorDynamicDataStructure.generated.h"
 
-UENUM(BlueprintType)
+UENUM()
 enum class EDynamicDataCategory : uint8 // Category(enum) of input data
 {
 	Primitive,
@@ -20,7 +20,7 @@ enum class EDynamicDataCategory : uint8 // Category(enum) of input data
 	Enum
 };
 
-USTRUCT(BlueprintType)
+USTRUCT()
 struct FDynamicValue
 {
 	GENERATED_BODY()
