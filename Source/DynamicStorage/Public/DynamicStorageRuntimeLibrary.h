@@ -27,17 +27,17 @@ class DYNAMICSTORAGE_API UDynamicStorageRuntimeLibrary : public UBlueprintFuncti
 public:
 
 	// Blueprint hook, validate the correct datatype, cache in global storage
-	UFUNCTION(BlueprintCallable, CustomThunk, Category = "Dynamic Value", meta = (CustomStructureParam = "InValue", DisplayName = "Set Dynamic Value"))
+	UFUNCTION(BlueprintCallable, CustomThunk, Category = "Dynamic Value", meta = (CustomStructureParam = "InValue", DisplayName = "Set Dynamic Value"), BlueprintInternalUseOnly)
 	static void SetDynamicValue(const FGameplayTag Tag, const int32& InValue);
 	DECLARE_FUNCTION(execSetDynamicValue);
 
 	// Blueprint hook, validate the correct datatype, retrieve from global storage
-	UFUNCTION(BlueprintCallable, CustomThunk, Category = "Dynamic Value", meta = (CustomStructureParam = "OutValue", DisplayName = "Get Dynamic Value"))
+	UFUNCTION(BlueprintCallable, CustomThunk, Category = "Dynamic Value", meta = (CustomStructureParam = "OutValue", DisplayName = "Get Dynamic Value"), BlueprintInternalUseOnly)
 	static void GetDynamicValue(const FGameplayTag Tag, int32& OutValue);
 	DECLARE_FUNCTION(execGetDynamicValue);
 
 	// Internal hook, copy blueprint node input pin datatype & value to output pin
-	UFUNCTION(BlueprintCallable, CustomThunk, Category = "Custom Nodes", meta = (CustomStructureParam = "InValue,OutValue", BlueprintInternalUseOnly = "true"))
+	UFUNCTION(BlueprintCallable, CustomThunk, Category = "Custom Nodes", meta = (CustomStructureParam = "InValue,OutValue"), BlueprintInternalUseOnly)
 	static void PassThroughValue(const int32& InValue, int32& OutValue);
 	DECLARE_FUNCTION(execPassThroughValue);
 
@@ -86,15 +86,15 @@ public:
 	}
 
 	// C++ hook, validate data, purge data from global storage
-	UFUNCTION(BlueprintCallable, Category = "Dynamic Value")
+	UFUNCTION(BlueprintCallable, Category = "Dynamic Value", BlueprintInternalUseOnly)
 	static void RemoveDynamicValue(const FGameplayTag Tag);
 
 	// C++ hook, validate data, perform a comprehensive purge of all data from global storage
-	UFUNCTION(BlueprintCallable, Category = "Dynamic Value")
+	UFUNCTION(BlueprintCallable, Category = "Dynamic Value", BlueprintInternalUseOnly)
 	static void ClearAllDynamicValues();
 
 	// C++ hook, validate data existence in global storage
-	UFUNCTION(BlueprintPure, Category = "Dynamic Value")
+	UFUNCTION(BlueprintPure, Category = "Dynamic Value", BlueprintInternalUseOnly)
 	static bool HasDynamicValue(const FGameplayTag Tag);
 
 	// C++ hook, retrieve global storage
