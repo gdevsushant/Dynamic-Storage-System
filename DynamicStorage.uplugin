@@ -7,23 +7,24 @@
 	"Category": "Programming",
 	"CreatedBy": "Sushant",
 	"CreatedByURL": "gdevsushant.onrender.com",
-	"DocsURL": "https://github.com/gdevsushant/Design-Architectures/blob/main/PluginDoc.drawio.pdf",
+	"DocsURL": "https://github.com/gdevsushant/Design-Architectures/blob/main/DynamicStoragePluginDoc",
 	"MarketplaceURL": "",
 	"SupportURL": "",
+	"EngineVersion": "5.7.0",
 	"CanContainContent": true,
-	"IsBetaVersion": false,
-	"IsExperimentalVersion": false,
-	"Installed": false,
+	"Installed": true,
 	"Modules": [
 		{
 			"Name": "DynamicStorage",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [ "Win64", "Mac", "Linux" ]
 		},
 		{
 			"Name": "DynamicStorageEditor",
 			"Type": "UncookedOnly",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [ "Win64", "Mac", "Linux" ]
 		}
 	],
 	"Plugins": [
@@ -31,5 +32,7 @@
 			"Name": "GameplayTagsEditor",
 			"Enabled": true
 		}
-	]
+	],
+
+	"FabURL": "com.epicgames.launcher://ue/Fab/product/fbf52734-0569-4636-a38b-9e1ed5474458"
 }
