@@ -314,7 +314,10 @@ void UK2Node_SetDynamicValue::SetSettingStorage(FGameplayTag Tag, FName Category
 
 		Def->PinCategory = Category;
 		Def->PinSubCategory = SubCategory;
-		Def->PinSubObject = SubCategoryObj;
+		if (SubCategoryObj) {
+
+			Def->PinSubObject = SubCategoryObj;
+		}
 
 		Setting->SaveConfig();
 		Setting->TryUpdateDefaultConfigFile();
@@ -324,7 +327,10 @@ void UK2Node_SetDynamicValue::SetSettingStorage(FGameplayTag Tag, FName Category
 	FStorageDefinition Val;
 	Val.PinCategory = Category;
 	Val.PinSubCategory = SubCategory;
-	Val.PinSubObject = SubCategoryObj;
+	if (SubCategoryObj) {
+
+		Val.PinSubObject = SubCategoryObj;
+	}
 	UE_LOG(LogTemp, Log, TEXT("ADDED TO SETTING STORAGE............."));
 	Setting->StorageRegistry.Add(Tag, Val);
 	Setting->SaveConfig();
