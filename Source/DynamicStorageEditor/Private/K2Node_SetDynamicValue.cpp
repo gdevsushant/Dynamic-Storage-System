@@ -86,10 +86,10 @@ void UK2Node_SetDynamicValue::ExpandNode(FKismetCompilerContext& CompilerContext
 	FuncInPin->PinType = SavedType;
 
 	// Refresh pin type on compile
-	FGameplayTag Tag;
-	FGameplayTag::StaticStruct()->ImportText(*TagPin->GetDefaultAsString(), &Tag, nullptr, EPropertyPortFlags::PPF_None, GError, FGameplayTag::StaticStruct()->GetName());
-	if (!Tag.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid Tag to set")); BreakAllNodeLinks(); return; }
-	SetSettingStorage(Tag, SelectedCategory, SelectedSubCategory, SelectedObject);
+	//FGameplayTag Tag;
+	//FGameplayTag::StaticStruct()->ImportText(*TagPin->GetDefaultAsString(), &Tag, nullptr, EPropertyPortFlags::PPF_None, GError, FGameplayTag::StaticStruct()->GetName());
+	//if (!Tag.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid Tag to set"));  BreakAllNodeLinks(); return; }
+	//SetSettingStorage(Tag, SelectedCategory, SelectedSubCategory, SelectedObject);
 
 	BreakAllNodeLinks();
 }
@@ -261,7 +261,8 @@ void UK2Node_SetDynamicValue::NotifyPinConnectionListChanged(UEdGraphPin* Pin)
 
 		FGameplayTag Tag;
 		FGameplayTag::StaticStruct()->ImportText(*TagPin->GetDefaultAsString(), &Tag, nullptr, EPropertyPortFlags::PPF_None, GError, FGameplayTag::StaticStruct()->GetName());
-		if (!Tag.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid Tag to set")); BreakAllNodeLinks(); return; }
+		if (InPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Wildcard) { GetGraph()->NotifyGraphChanged(); return; }
+		if (!Tag.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid Tag to set")); GetGraph()->NotifyGraphChanged(); return; }
 		SetSettingStorage(Tag, SelectedCategory, SelectedSubCategory, SelectedObject);
 	}
 	else if (!InPin->DefaultValue.IsEmpty() && InPin->PinType.PinCategory != UEdGraphSchema_K2::PC_Wildcard)
@@ -304,7 +305,7 @@ void UK2Node_SetDynamicValue::SetSettingStorage(FGameplayTag Tag, FName Category
 	if (!Tag.IsValid() || !Category.IsValid() || !SubCategory.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid tag")); return; }
 	if (!Category.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid category")); return; }
 	if (!SubCategory.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid subcategory")); return; }
-	if (!SubCategoryObj) { UE_LOG(LogTemp, Log, TEXT("Invalid Object")); return; }
+	if (!SubCategoryObj) { UE_LOG(LogTemp, Log, TEXT("Invalid Object")); }
 
 	UDynamicStorageProjectSetting* Setting = GetProjectSetting();
 	if (!Setting) { UE_LOG(LogTemp, Log, TEXT("Invalid Setting")); return; }
@@ -314,10 +315,7 @@ void UK2Node_SetDynamicValue::SetSettingStorage(FGameplayTag Tag, FName Category
 
 		Def->PinCategory = Category;
 		Def->PinSubCategory = SubCategory;
-		if (SubCategoryObj) {
-
-			Def->PinSubObject = SubCategoryObj;
-		}
+		Def->PinSubObject = SubCategoryObj;
 
 		Setting->SaveConfig();
 		Setting->TryUpdateDefaultConfigFile();
@@ -327,10 +325,8 @@ void UK2Node_SetDynamicValue::SetSettingStorage(FGameplayTag Tag, FName Category
 	FStorageDefinition Val;
 	Val.PinCategory = Category;
 	Val.PinSubCategory = SubCategory;
-	if (SubCategoryObj) {
+	Val.PinSubObject = SubCategoryObj;
 
-		Val.PinSubObject = SubCategoryObj;
-	}
 	UE_LOG(LogTemp, Log, TEXT("ADDED TO SETTING STORAGE............."));
 	Setting->StorageRegistry.Add(Tag, Val);
 	Setting->SaveConfig();
