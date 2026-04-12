@@ -9,6 +9,7 @@
 #include "UObject/StructOnScope.h"
 #include "Templates/Models.h"
 #include "NativeGameplayTags.h"  
+#include <concepts>
 #include "DynamicStorageRuntimeLibrary.generated.h"
 
 struct FDynamicValue;
@@ -66,7 +67,17 @@ public:
 	static typename TEnableIf<!TModels<CStaticStructProvider, T>::Value && !TIsUnrealStruct<T>::Value && !TIsEnum<T>::Value, void>::Type
 		SetValue(const FGameplayTag Tag, const T& Value)
 	{
-		Internal_SetPrimitiveValue(Tag, &Value, sizeof(T), FName(TNameOf<T>::GetName()));
+		FName TypeName = NAME_None;
+
+		if constexpr (std::same_as<T, bool>) { TypeName = FName("bool"); }
+		else if constexpr (std::same_as<T, int32>) { TypeName = FName("int32"); }
+		else if constexpr (std::same_as<T, float>) { TypeName = FName("float"); }
+		else if constexpr (std::same_as<T, double>) { TypeName = FName("double"); }
+		else if constexpr (std::same_as<T, int64>) { TypeName = FName("int64"); }
+		else if constexpr (std::same_as<T, int>) { TypeName = FName("int"); }
+		else { TypeName = FName(TNameOf<T>::GetName()); }
+
+		Internal_SetPrimitiveValue(Tag, &Value, sizeof(T), TypeName);
 	}
 
 	/** Getter members */
