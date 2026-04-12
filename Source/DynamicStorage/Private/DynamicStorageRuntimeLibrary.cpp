@@ -3,6 +3,7 @@
 #include "DynamicStorageRuntimeLibrary.h"
 #include "DynamicStorageEditorDynamicDataStructure.h"
 #include "NativeGameplayTags.h"
+#include "DynamicStorageProjectSetting.h"
 
 TMap<FGameplayTag, FDynamicValue> UDynamicStorageRuntimeLibrary::Storage; // Define global storage for dynamic values
 
@@ -19,6 +20,7 @@ void UDynamicStorageRuntimeLibrary::Internal_SetGenericValue(const FGameplayTag 
 
 	FDynamicValue NewVar;
 	NewVar.TypeName = InProp->GetFName();
+	FStorageDefinition Def;
 
 	if (FStructProperty* StructProp = CastField<FStructProperty>(InProp)) // Validates data to structure
 	{
@@ -27,12 +29,21 @@ void UDynamicStorageRuntimeLibrary::Internal_SetGenericValue(const FGameplayTag 
 		NewVar.Data.SetNumZeroed(StructProp->Struct->GetStructureSize());
 		StructProp->Struct->InitializeStruct(NewVar.Data.GetData());
 		StructProp->Struct->CopyScriptStruct(NewVar.Data.GetData(), ValuePtr);
+		Def.PinCategory = FName("struct");
+		Def.PinSubCategory = *StructProp->GetName();
+		Def.PinSubObject = StructProp->Struct;
+
+		UE_LOG(LogTemp, Log, TEXT("Name:- %s"), *Def.PinSubCategory.ToString());
+		UE_LOG(LogTemp, Log, TEXT("Object:- %s"), *Def.PinSubObject->GetName());
 	}
 	else if (FObjectProperty* ObjectProp = CastField<FObjectProperty>(InProp)) // Validates data to UObject
 	{
 		NewVar.Category = EDynamicDataCategory::Object;
 		NewVar.ObjectValue = ObjectProp->GetObjectPropertyValue(ValuePtr);
 		NewVar.ClassValue = ObjectProp->PropertyClass;
+		Def.PinCategory = FName("object");
+		Def.PinSubCategory = NAME_None;
+		Def.PinSubObject = NewVar.ObjectValue;
 	}
 	else // Validates data to primitive type by default
 	{
@@ -44,6 +55,11 @@ void UDynamicStorageRuntimeLibrary::Internal_SetGenericValue(const FGameplayTag 
 
 	if (FDynamicValue* Existing = GetStorage().Find(Tag)) Existing->Clear(); // Validate existing data, clear from global storage and break logic
 	GetStorage().Add(Tag, MoveTemp(NewVar)); // Cache new data in global storage
+
+	UDynamicStorageProjectSetting* Setting = GetMutableDefault<UDynamicStorageProjectSetting>();
+
+	if (!Setting) { UE_LOG(LogTemp, Log, TEXT("Setting is invalid in runtimelibrary in Internal_SetGeneric prop version")); return; }
+	Setting->StorageRegistry.Add(Tag, Def);
 }
 
 void UDynamicStorageRuntimeLibrary::Internal_GetGenericValue(const FGameplayTag Tag, FProperty* OutProp, void* OutValuePtr)
@@ -94,6 +110,16 @@ void UDynamicStorageRuntimeLibrary::Internal_SetGenericValue(const FGameplayTag 
 
 	if (FDynamicValue* Existing = GetStorage().Find(Tag)) Existing->Clear(); // Validate existing data, clear from global storage
 	GetStorage().Add(Tag, MoveTemp(NewVar)); // Cache new data in global storage
+
+	UDynamicStorageProjectSetting* Setting = GetMutableDefault<UDynamicStorageProjectSetting>();
+
+	if (!Setting) { UE_LOG(LogTemp, Log, TEXT("Setting is invalid in runtimelibrary in Internal_SetGeneric prop version")); return; }
+	FStorageDefinition Def;
+
+	Def.PinCategory = FName("struct");
+	Def.PinSubCategory = NAME_None;
+	Def.PinSubObject = NewVar.StructValue;
+	Setting->StorageRegistry.Add(Tag, Def);
 }
 
 void UDynamicStorageRuntimeLibrary::Internal_GetGenericValue(const FGameplayTag Tag, UScriptStruct* Struct, void* OutValuePtr)
@@ -116,6 +142,15 @@ void UDynamicStorageRuntimeLibrary::Internal_SetPrimitiveValue(const FGameplayTa
 
 	if (FDynamicValue* Existing = GetStorage().Find(Tag)) Existing->Clear(); // Validate existing data, clear from global storage
 	GetStorage().Add(Tag, MoveTemp(NewVar)); // Cache new data in global storage
+
+	UDynamicStorageProjectSetting* Setting = GetMutableDefault<UDynamicStorageProjectSetting>();
+
+	if (!Setting) { UE_LOG(LogTemp, Log, TEXT("Setting is invalid in runtimelibrary in Internal_SetGeneric prop version")); return; }
+	FStorageDefinition Def;
+	Def.PinCategory = NewVar.TypeName;
+	Def.PinSubCategory = NAME_None;
+	Def.PinSubObject = nullptr;
+	Setting->StorageRegistry.Add(Tag, Def);
 }
 
 void UDynamicStorageRuntimeLibrary::Internal_GetPrimitiveValue(const FGameplayTag Tag, void* OutValuePtr, int32 Size)
