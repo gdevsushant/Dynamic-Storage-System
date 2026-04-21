@@ -155,13 +155,63 @@ void UDynamicStorageRuntimeLibrary::Internal_SetPrimitiveValue(const FGameplayTa
 
 void UDynamicStorageRuntimeLibrary::Internal_GetPrimitiveValue(const FGameplayTag Tag, void* OutValuePtr, int32 Size)
 {
+	if (!Tag.IsValid()) {UE_LOG(LogTemp, Error, TEXT("Tag in invalid in Primitive value....")); return;}
+	
 	if (FDynamicValue* Found = GetStorage().Find(Tag))
 	{
-		if (Found->Category == EDynamicDataCategory::Primitive && Found->Data.Num() == Size)
+		if (Found->Category == EDynamicDataCategory::Primitive)
 		{
-			FMemory::Memcpy(OutValuePtr, Found->Data.GetData(), Size); // Copy the primitive data from global storage to the output pointer
+			int32 BytesToCopy = FMath::Min(Size, Found->Data.Num());
+
+			if (BytesToCopy > 0)
+			{
+				// Zero out the destination first to prevent garbage data if sizes differ
+				FMemory::Memzero(OutValuePtr, Size);
+				FMemory::Memcpy(OutValuePtr, Found->Data.GetData(), BytesToCopy);
+			}
 		}
 	}
+}
+
+void UDynamicStorageRuntimeLibrary::Internal_SetObjectValue(const FGameplayTag Tag, UObject* InObject)
+{
+	if (!Tag.IsValid()) return;
+
+	FDynamicValue NewVar;
+	FStorageDefinition Def;
+	NewVar.Category = EDynamicDataCategory::Object;
+	NewVar.ObjectValue = InObject; 
+	// If your FDynamicValue struct has a ClassValue field:
+	NewVar.ClassValue = InObject ? InObject->GetClass() : nullptr;
+	
+	Def.PinCategory = FName("object");
+	Def.PinSubCategory = *InObject->GetName();
+	Def.PinSubObject = InObject;
+
+	// Standard cleanup and add logic from your existing code
+	if (FDynamicValue* Existing = GetStorage().Find(Tag)) 
+	{
+		Existing->Clear(); 
+	}
+	GetStorage().Add(Tag, MoveTemp(NewVar));
+	
+	UDynamicStorageProjectSetting* Setting = GetMutableDefault<UDynamicStorageProjectSetting>();
+
+	if (!Setting) { UE_LOG(LogTemp, Log, TEXT("Setting is invalid in runtimelibrary in Internal_SetGeneric prop version")); return; }
+	Setting->StorageRegistry.Add(Tag, Def);
+}
+
+UObject* UDynamicStorageRuntimeLibrary::Internal_GetObjectValue(const FGameplayTag Tag)
+{
+	if (FDynamicValue* Found = GetStorage().Find(Tag))
+	{
+		if (Found->Category == EDynamicDataCategory::Object)
+		{
+			// .Get() handles TWeakObjectPtr if that's what you're using in the struct
+			return Found->ObjectValue.Get(); 
+		}
+	}
+	return nullptr;
 }
 
 DEFINE_FUNCTION(UDynamicStorageRuntimeLibrary::execSetDynamicValue)

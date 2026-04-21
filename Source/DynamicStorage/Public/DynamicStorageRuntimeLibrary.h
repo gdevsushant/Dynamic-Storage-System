@@ -76,6 +76,15 @@ public:
 		else if constexpr (std::same_as<T, int64>) { TypeName = FName("int64"); }
 		else if constexpr (std::same_as<T, int>) { TypeName = FName("int"); }
 		else { TypeName = FName(TNameOf<T>::GetName()); }
+		
+		/*
+		if constexpr (std::same_as<T, bool>)    { TypeName = FName("bool"); }
+		else if constexpr (std::same_as<T, int32>) { TypeName = FName("int"); } // BP calls this "int"
+		else if constexpr (std::same_as<T, float>) { TypeName = FName("float"); }
+		else if constexpr (std::same_as<T, double>){ TypeName = FName("real"); } // UE5 internally uses "real" for doubles
+		else if constexpr (std::same_as<T, int64>) { TypeName = FName("int64"); }
+		else { TypeName = FName(TNameOf<T>::GetName()); }
+		 */
 
 		Internal_SetPrimitiveValue(Tag, &Value, sizeof(T), TypeName);
 	}
@@ -84,7 +93,7 @@ public:
 
 	// C++ hook, validate data, retrieve from global storage. Handles UStructs (FVector, FRotator, and Custom USTRUCTs)
 	template<typename T>
-	static T GetValue(const FGameplayTag Tag, const T& DefaultValue = T())
+	static typename TEnableIf<!TIsDerivedFrom<T, UObject>::IsDerived, T>::Type GetValue(const FGameplayTag Tag, const T& DefaultValue = T())
 	{
 		T Result = DefaultValue;
 		if constexpr (TModels<CStaticStructProvider, T>::Value || TIsUnrealStruct<T>::Value)
@@ -97,6 +106,25 @@ public:
 		}
 		return Result;
 	}
+
+	/** C++ hook, validate data, cache in global storage. Handles UObjects (Actors, Components, etc.) */
+	template<typename T>
+	static typename TEnableIf<TIsDerivedFrom<T, UObject>::IsDerived, void>::Type
+	SetValue(const FGameplayTag Tag, T* Value)
+	{
+		Internal_SetObjectValue(Tag, Value);
+	}
+
+    // C++ hook, validate data, retrieve from global storage. Handles UObjects
+	template<typename T>
+	static typename TEnableIf<TIsDerivedFrom<T, UObject>::IsDerived, T*>::Type
+	GetValue(const FGameplayTag Tag)
+	{
+		return Cast<T>(Internal_GetObjectValue(Tag));
+	}
+	
+	static void Internal_SetObjectValue(const FGameplayTag Tag, UObject* InObject);
+	static UObject* Internal_GetObjectValue(const FGameplayTag Tag);
 
 	// C++ hook, validate data, purge data from global storage
 	UFUNCTION(BlueprintCallable, Category = "Dynamic Value", BlueprintInternalUseOnly)
