@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// Copyright (c) Sushant 2026. All Rights Reserved.
+
+#pragma once
 
 #include <set>
 #include <unordered_set>

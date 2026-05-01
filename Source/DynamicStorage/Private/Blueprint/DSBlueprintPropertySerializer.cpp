@@ -1,4 +1,6 @@
-﻿#include "Blueprint/DSBlueprintPropertySerializer.h"
+﻿// Copyright (c) Sushant 2026. All Rights Reserved.
+
+#include "Blueprint/DSBlueprintPropertySerializer.h"
 
 #include "Serialization/Core/DSValueSerializer.h"
 #include "Serialization/Handlers/DSStructSerializer.h"

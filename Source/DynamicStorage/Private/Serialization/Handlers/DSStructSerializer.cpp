@@ -1,3 +1,5 @@
+// Copyright (c) Sushant 2026. All Rights Reserved.
+
 #include "Serialization/Handlers/DSStructSerializer.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 

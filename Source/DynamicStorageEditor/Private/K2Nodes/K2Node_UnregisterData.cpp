@@ -1,4 +1,6 @@
-﻿#include "K2Nodes/K2Node_UnregisterData.h"
+﻿// Copyright (c) Sushant 2026. All Rights Reserved.
+
+#include "K2Nodes/K2Node_UnregisterData.h"
 
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintNodeSpawner.h"

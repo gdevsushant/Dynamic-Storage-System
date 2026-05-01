@@ -1,4 +1,6 @@
-﻿#include "DynamicStorageEditor/Public/K2Nodes/DSTypeDescriptorUtils.h"
+﻿// Copyright (c) Sushant 2026. All Rights Reserved.
+
+#include "DynamicStorageEditor/Public/K2Nodes/DSTypeDescriptorUtils.h"
 
 #include "EdGraphSchema_K2.h"
 #include "UObject/Class.h"

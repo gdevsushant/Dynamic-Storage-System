@@ -1,3 +1,5 @@
+// Copyright (c) Sushant 2026. All Rights Reserved.
+
 #include "Serialization/Special/DSNameSpecialCase.h"
 
 void FDSNameSpecialCase::Serialize(

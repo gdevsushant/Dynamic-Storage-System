@@ -1,3 +1,5 @@
+// Copyright (c) Sushant 2026. All Rights Reserved.
+
 #include "Storage/DSObjectRegistry.h"
 
 FGuid UDSObjectRegistry::RegisterObject(UObject* Object)

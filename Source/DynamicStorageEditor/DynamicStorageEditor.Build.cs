@@ -1,3 +1,5 @@
+// Copyright (c) Sushant 2026. All Rights Reserved.
+
 using UnrealBuildTool;
 
 public class DynamicStorageEditor : ModuleRules

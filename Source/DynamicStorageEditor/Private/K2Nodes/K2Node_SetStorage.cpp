@@ -1,3 +1,5 @@
+// Copyright (c) Sushant 2026. All Rights Reserved.
+
 #include "K2Nodes/K2Node_SetStorage.h"
 
 #include "BlueprintActionDatabaseRegistrar.h"
