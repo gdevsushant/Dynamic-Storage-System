@@ -1,5 +1,3 @@
-// Copyright (c) Sushant Chahar. 2026. All Rights Reserved.
-
 using UnrealBuildTool;
 
 public class DynamicStorageEditor : ModuleRules
@@ -8,20 +6,23 @@ public class DynamicStorageEditor : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] { 
-            "Core", "CoreUObject", "Engine",
-            "DynamicStorage", "GameplayTags"
-        });
-
-        PrivateDependencyModuleNames.AddRange(new string[] {
-            "BlueprintGraph", "KismetCompiler", "GraphEditor",
-            "Slate", "SlateCore", "ToolMenus",
-            "AssetRegistry", "GameplayTagsEditor"
-        });
-
-        if (Target.bBuildEditor)
+        PublicDependencyModuleNames.AddRange(new string[]
         {
-            PrivateDependencyModuleNames.Add("UnrealEd");
-        }
+            "Core",
+            "CoreUObject",
+            "Engine",
+            "DynamicStorage"   // 🔥 runtime dependency
+        });
+
+        PrivateDependencyModuleNames.AddRange(new string[]
+        {
+            "UnrealEd",
+            "BlueprintGraph",
+            "KismetCompiler",
+            "GraphEditor",
+            "Slate",
+            "SlateCore",
+            "GameplayTags"
+        });
     }
 }

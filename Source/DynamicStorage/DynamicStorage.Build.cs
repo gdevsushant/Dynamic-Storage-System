@@ -1,24 +1,28 @@
-// Copyright (c) Sushant Chahar. 2026. All Rights Reserved.
-
+using System.IO;
 using UnrealBuildTool;
 
 public class DynamicStorage : ModuleRules
 {
-	public DynamicStorage(ReadOnlyTargetRules Target) : base(Target)
-	{
-		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+    public DynamicStorage(ReadOnlyTargetRules Target) : base(Target)
+    {
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		// Public dependencies are available to other modules/projects using your plugin
-		PublicDependencyModuleNames.AddRange(new string[] { 
-			"Core", 
-			"CoreUObject", 
-			"Engine", 
-			"GameplayTags" 
-		});
+        PublicDependencyModuleNames.AddRange(new string[]
+        {
+            "Core",
+            "CoreUObject",
+            "Engine",
+            "GameplayTags",
+            "DeveloperSettings"
+        });
+        
+        PublicIncludePaths.AddRange(new string[]
+        {
+            Path.Combine(ModuleDirectory, "Public/API")
+        });
 
-		// Private dependencies are only used inside this module
-		PrivateDependencyModuleNames.AddRange(new string[] {
-			"DeveloperSettings" // Necessary if you use UDeveloperSettings for your project settings
-		});
-	}
+        PrivateDependencyModuleNames.AddRange(new string[]
+        {
+        });
+    }
 }
