@@ -88,12 +88,12 @@ public:
 
         if (System->StorageCore->HasValue(Tag))
         {
-            UE_LOG(
-                LogTemp,
-                Warning,
-                TEXT("DynamicStorage: RegisterData overwriting existing data for Tag [%s]."),
-                *Tag.ToString()
-            );
+            // UE_LOG(
+            //     LogTemp,
+            //     Warning,
+            //     TEXT("DynamicStorage: RegisterData overwriting existing data for Tag [%s]."),
+            //     *Tag.ToString()
+            // );
         }
 
         TArray<uint8> Bytes;
@@ -134,12 +134,17 @@ public:
         const FGameplayTag& Tag
     )
     {
-        T Result{};
+        using CleanT = std::remove_cv_t<std::remove_reference_t<T>>;
+
+        CleanT Result{};
 
         if (!Tag.IsValid())
         {
-            UE_LOG(LogTemp, Error, TEXT("DynamicStorage: RetrieveData failed. Invalid GameplayTag."));
-            ensureMsgf(false, TEXT("DynamicStorage: RetrieveData failed. Invalid GameplayTag."));
+            ensureMsgf(
+                false,
+                TEXT("DynamicStorage: RetrieveData failed. Invalid GameplayTag.")
+            );
+
             return Result;
         }
 
@@ -147,13 +152,16 @@ public:
 
         if (!System || !System->StorageCore)
         {
-            UE_LOG(LogTemp, Error, TEXT("DynamicStorage: RetrieveData failed. Invalid storage system."));
-            ensureMsgf(false, TEXT("DynamicStorage: RetrieveData failed. Invalid storage system."));
+            ensureMsgf(
+                false,
+                TEXT("DynamicStorage: RetrieveData failed. Invalid storage system.")
+            );
+
             return Result;
         }
 
         FName StoredTypeId;
-        const FName RequestedTypeId = GetTypeId<T>();
+        const FName RequestedTypeId = GetTypeId<CleanT>();
 
         if (!System->StorageCore->GetTypeId(Tag, StoredTypeId))
         {
@@ -161,24 +169,6 @@ public:
                 LogTemp,
                 Warning,
                 TEXT("DynamicStorage: RetrieveData failed. No type metadata found for Tag [%s]."),
-                *Tag.ToString()
-            );
-
-            return Result;
-        }
-
-        if (StoredTypeId != RequestedTypeId)
-        {
-            UE_LOG(
-                LogTemp,
-                Error,
-                TEXT("DynamicStorage: RetrieveData failed. Type mismatch for Tag [%s]."),
-                *Tag.ToString()
-            );
-
-            ensureMsgf(
-                false,
-                TEXT("DynamicStorage: RetrieveData failed. Type mismatch for Tag [%s]."),
                 *Tag.ToString()
             );
 
@@ -199,26 +189,58 @@ public:
             return Result;
         }
 
-        if (!FDSValueSerializer::Deserialize<T>(
+        if (StoredTypeId != RequestedTypeId)
+        {
+            if (TryDeserializeFloatDoubleCompatible<CleanT>(
+                StoredTypeId,
+                RequestedTypeId,
+                Bytes,
+                Result,
+                System->ObjectRegistry
+            ))
+            {
+                return Result;
+            }
+
+            ensureMsgf(
+                false,
+                TEXT("DynamicStorage: RetrieveData failed. Type mismatch for Tag [%s]. Stored=[%s], Requested=[%s], Bytes=[%d]."),
+                *Tag.ToString(),
+                *StoredTypeId.ToString(),
+                *RequestedTypeId.ToString(),
+                Bytes.Num()
+            );
+
+            return Result;
+        }
+
+        if (!FDSValueSerializer::Deserialize<CleanT>(
             Bytes,
             Result,
             System->ObjectRegistry
         ))
         {
-            UE_LOG(
-                LogTemp,
-                Error,
-                TEXT("DynamicStorage: Failed to deserialize data for Tag [%s]."),
-                *Tag.ToString()
-            );
+            if (TryDeserializeFloatDoubleCompatible<CleanT>(
+                StoredTypeId,
+                RequestedTypeId,
+                Bytes,
+                Result,
+                System->ObjectRegistry
+            ))
+            {
+                return Result;
+            }
 
             ensureMsgf(
                 false,
-                TEXT("DynamicStorage: Failed to deserialize data for Tag [%s]."),
-                *Tag.ToString()
+                TEXT("DynamicStorage: Failed to deserialize data for Tag [%s]. Stored=[%s], Requested=[%s], Bytes=[%d]."),
+                *Tag.ToString(),
+                *StoredTypeId.ToString(),
+                *RequestedTypeId.ToString(),
+                Bytes.Num()
             );
 
-            return T{};
+            return Result;
         }
 
         return Result;
@@ -580,4 +602,89 @@ private:
     }
 
 #endif
+    
+private:
+    template<typename RequestedT>
+    static bool TryDeserializeFloatDoubleCompatible(
+        const FName& StoredTypeId,
+        const FName& RequestedTypeId,
+        const TArray<uint8>& Bytes,
+        RequestedT& OutValue,
+        UDSObjectRegistry* ObjectRegistry
+    )
+    {
+        using CleanT = std::remove_cv_t<std::remove_reference_t<RequestedT>>;
+    
+        const FName FloatTypeId = GetTypeId<float>();
+        const FName DoubleTypeId = GetTypeId<double>();
+    
+        if constexpr (std::is_same_v<CleanT, float>)
+        {
+            const bool bStoredAsDouble =
+                StoredTypeId == DoubleTypeId ||
+                Bytes.Num() == sizeof(double);
+    
+            if (bStoredAsDouble)
+            {
+                double TempValue = 0.0;
+    
+                if (FDSValueSerializer::Deserialize<double>(
+                    Bytes,
+                    TempValue,
+                    ObjectRegistry
+                ))
+                {
+                    OutValue = static_cast<float>(TempValue);
+                    return true;
+                }
+    
+                if (Bytes.Num() == sizeof(double))
+                {
+                    FMemory::Memcpy(
+                        &TempValue,
+                        Bytes.GetData(),
+                        sizeof(double)
+                    );
+    
+                    OutValue = static_cast<float>(TempValue);
+                    return true;
+                }
+            }
+        }
+        else if constexpr (std::is_same_v<CleanT, double>)
+        {
+            const bool bStoredAsFloat =
+                StoredTypeId == FloatTypeId ||
+                Bytes.Num() == sizeof(float);
+    
+            if (bStoredAsFloat)
+            {
+                float TempValue = 0.0f;
+    
+                if (FDSValueSerializer::Deserialize<float>(
+                    Bytes,
+                    TempValue,
+                    ObjectRegistry
+                ))
+                {
+                    OutValue = static_cast<double>(TempValue);
+                    return true;
+                }
+    
+                if (Bytes.Num() == sizeof(float))
+                {
+                    FMemory::Memcpy(
+                        &TempValue,
+                        Bytes.GetData(),
+                        sizeof(float)
+                    );
+    
+                    OutValue = static_cast<double>(TempValue);
+                    return true;
+                }
+            }
+        }
+    
+        return false;
+    }
 };
